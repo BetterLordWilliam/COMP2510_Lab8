@@ -1,0 +1,3 @@
+5
+apple,orange,banana,kiwi,grape,pear,lemon,peach,mango,pineapple,strawberry,watermelon,blueberry,raspberry,blackberry,cherry
+E
