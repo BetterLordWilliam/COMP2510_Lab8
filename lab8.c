@@ -353,10 +353,22 @@ ListNode* sortedMerge(ListNode* a, ListNode* b) {
     /* Pick either a or b, and recur */
     if (compareNodes(a, b) <= 0) {
         result = a;
+        printf("A smaller than B.\n");
+        printf("A: ");
+        printNode(a);
+        printf("B: ");
+        printNode(b);
+        printf("\n");
         result->next = sortedMerge(a->next, b);
     }
     else {
         result = b;
+        printf("A larger than B.\n");
+        printf("A: ");
+        printNode(a);
+        printf("B: ");
+        printNode(b);
+        printf("\n");
         result->next = sortedMerge(a, b->next);
     }
     return (result);
