@@ -147,7 +147,7 @@ void createNode(ListNode *head, const char *data, int dataType) {
             newNode->data.character = *(data);
             break;
         case(5):
-            char *dest = 0;
+            char *dest = malloc(sizeof(char) * strlen(data));
             memcpy(dest, data, strlen(data));
             newNode->t = STRING;
             newNode->data.string = dest;
