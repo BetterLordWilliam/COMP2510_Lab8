@@ -7,7 +7,9 @@
 // A01372608
 
 // enums
-typedef enum dataTypes { SHORT, INT, FLOAT, CHAR, STRING } DataType;
+typedef enum dataTypes { 
+    SHORT, INT, FLOAT, CHAR, STRING 
+} DataType;
 
 // Structs
 typedef struct listNode {
@@ -104,6 +106,10 @@ void basicPrint(ListNode *head) {
     while(itr != NULL) {
         if (itr->t == STRING)
             printf("%s\n", itr->data.string);
+        if (itr->t == CHAR)
+            printf("%c\n", itr->data.character);
+        if (itr->t == SHORT)
+            printf("%d\n", itr->data.shortInteger);
         if (itr->t == INT)
             printf("%d\n", itr->data.integer);
         if (itr->t == FLOAT)
@@ -112,17 +118,13 @@ void basicPrint(ListNode *head) {
     }
 }
 
-void char2short() {
-
-}
-
 /**
  * createNode:                  Creates a node in the LinkedList
  * param *head:                 Start of the list
  * param *data:                 Value of the list node
 */
 void createNode(ListNode *head, const char *data, int dataType) {
-    printf("%s\n", data);
+    //printf("%s\n", data);
     ListNode *itr = head->next;
     ListNode *newNode = malloc(sizeof(struct listNode));
     newNode->next = NULL;
@@ -149,7 +151,7 @@ void createNode(ListNode *head, const char *data, int dataType) {
             memcpy(dest, data, strlen(data));
             newNode->t = STRING;
             newNode->data.string = dest;
-            break;
+            break; // STRING NEEDS TO BE FIXED
     }
 
     if (itr == NULL) {
