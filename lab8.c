@@ -14,6 +14,7 @@ typedef enum dataTypes {
 // Structs
 typedef struct listNode {
     DataType t;
+    size_t sLen;
 
     union nodeData {
         short shortInteger;
@@ -147,9 +148,12 @@ void createNode(ListNode *head, const char *data, int dataType) {
             newNode->data.character = *(data);
             break;
         case(5):
-            char *dest = malloc(sizeof(char) * strlen(data));
-            memcpy(dest, data, strlen(data));
+            int sSize = strlen(data);
+            char *dest = malloc(sizeof(char) * (sSize + 1));
+            *(dest + (int) sSize) = '\0';
+            memcpy(dest, data, sSize);
             newNode->t = STRING;
+            newNode->sLen = sSize + 1;
             newNode->data.string = dest;
             break;
     }
