@@ -151,7 +151,7 @@ void createNode(ListNode *head, const char *data, int dataType) {
             memcpy(dest, data, strlen(data));
             newNode->t = STRING;
             newNode->data.string = dest;
-            break; // STRING NEEDS TO BE FIXED
+            break;
     }
 
     if (itr == NULL) {
