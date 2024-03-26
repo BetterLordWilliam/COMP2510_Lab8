@@ -324,7 +324,7 @@ void frontBackSplit(ListNode* source,
  * param *a: Node1
  * param *b: Node2
 */
-int compareNodes(ListNode *a, ListNode *b) {
+double compareNodes(ListNode *a, ListNode *b) {
     switch (a->t) {
         case SHORT:
             return a->data.shortInteger - b->data.shortInteger;
