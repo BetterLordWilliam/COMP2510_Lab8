@@ -79,11 +79,11 @@ int main(int argc, char *argv[]){
     // Begin the Process
     innitLinkedList(head, dtP, elemCount);
     
-    basicPrint(head);
-    printf("\n");
+    //basicPrint(head);
+    //printf("\n");
     mergeSort(&(head->next));
 
-    basicPrint(head);
+    //basicPrint(head);
     exportList(head);
 
     freeList(head);
@@ -273,12 +273,7 @@ void innitLinkedList(ListNode *head, int *dtP, int *elemCount) {
     fseek(in, 2, SEEK_SET);         // Put it to the line with numbers.
     char delim[] = ",";
     if (fgets(line, sizeof(line), in) != NULL) {
-        int length = strlen(line);
-        char *dest = malloc((length-1) * sizeof(char));  
-        memcpy(dest, line, length);
-        dest[strlen(dest)] = '\0';
-
-        array = strtok(dest, delim);
+        array = strtok(line, delim);
 
         // Checks for delimiter
         while (array != 0) {
@@ -353,22 +348,10 @@ ListNode* sortedMerge(ListNode* a, ListNode* b) {
     /* Pick either a or b, and recur */
     if (compareNodes(a, b) <= 0) {
         result = a;
-        printf("A smaller than B.\n");
-        printf("A: ");
-        printNode(a);
-        printf("B: ");
-        printNode(b);
-        printf("\n");
         result->next = sortedMerge(a->next, b);
     }
     else {
         result = b;
-        printf("A larger than B.\n");
-        printf("A: ");
-        printNode(a);
-        printf("B: ");
-        printNode(b);
-        printf("\n");
         result->next = sortedMerge(a, b->next);
     }
     return (result);
