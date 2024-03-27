@@ -3,9 +3,11 @@
 #include <string.h>
 
 #define MAX_LINE_LENGTH 256
-#define SHORT_BYTES 2
-#define INT_BYTES 4
-#define DOUBLE_BYTES 8
+
+#define MIN_SHORT -32767 
+#define MAX_SHORT 32767
+#define MIN_INT -2147483648
+#define MAX_INT 2147483647
 
 // A01372608
 
@@ -18,6 +20,7 @@ typedef enum dataTypes {
 typedef struct listNode {
     DataType t;
     int isHead;
+    int byte_size;
 
     union nodeData {
         short shortInteger;
@@ -33,7 +36,6 @@ typedef struct listNode {
 // Global variables
 FILE *in;
 FILE *out;
-size_t bytes;           // Size of the data in the LinkedList
 
 // Basic Method headers
 void innitLinkedList(ListNode *head, int *dtP, int *elemCount);
@@ -41,14 +43,14 @@ void createNode(ListNode *head, const char *data, int dataType);
 void printErrorExit();
 void freeList(ListNode *head);
 void basicPrint(ListNode *head);
+void exportList(ListNode *head);
 
 // LinkedList sort methods
-ListNode* SortedMerge(ListNode* a, ListNode* b);
-void FrontBackSplit(ListNode* source,
+ListNode* sortedMerge(ListNode* a, ListNode* b);
+double compareNodes(ListNode *a, ListNode *b);
+void mergeSort(ListNode** headRef);
+void frontBackSplit(ListNode* source,
                     ListNode** frontRef, ListNode** backRef);
-
-// Generic Comparisons
-
 
 /**
  * main:            Drives the program.
@@ -150,42 +152,6 @@ void basicPrint(ListNode *head) {
 }
 
 /**
- * getMax:      Returns the maxNumber for specified bitwidth.
- * param *mnN:  The address where this max is to be stored.
- * param *bN:   The number of bits.
- * 
- * formula max = 2^(n-1) - 1, signed
-*/
-int getMax(int bN) {
-    long long t = 1;
-    int bNC = bN - 1;
-    while (bNC != 0) {
-        t = t << 1;   // basically multiply by 2
-        bNC--;
-    }
-    t--;
-    return t;
-}
-
-/**
- * getMin:      Returns the minNumber for specified bitwidth.
- * param *mnN:  The address where this min is to be stored
- * param *bN:   The number of bits
- * 
- * formula min = -2^(n-1), signed
-*/
-int getMin(int bN) {
-    long long t = 1;
-    int bNC = bN - 1;
-    while (bNC != 0) {
-        t = t << 1;   // basically multiply by 2
-        bNC--;
-    }
-    t*=-1;
-    return t;
-}
-
-/**
  * createNode:                  Creates a node in the LinkedList
  * param *head:                 Start of the list
  * param *data:                 Value of the list node
@@ -196,24 +162,19 @@ void createNode(ListNode *head, const char *data, int dataType) {
     ListNode *newNode = malloc(sizeof(struct listNode));
     newNode->next = NULL;
     newNode->isHead = 0;
-    int m = 0, mX = 0;
 
     switch (dataType) {
         case(1):
             newNode->t = SHORT;
-            // Range check
-            m = getMin(sizeof(short) * 8), mX = getMax(sizeof(short) * 8);
-            long long numberS = atoi(data);
-            if (!(numberS >= m && numberS <= mX) || numberS == 0)       // In range of short and Atoi was successful
+            long long numberS = atoi(data);                                            // Range check
+            if (!(numberS >= MIN_SHORT && numberS <= MAX_SHORT) || numberS == 0)       // In range of short and Atoi was successful
                 printErrorExit();
             newNode->data.shortInteger = (short) numberS;
             break;
         case(2):
             newNode->t = INT;
-            // Range check
-            m = getMin(sizeof(int) * 8), mX = getMax(sizeof(int) * 8);
-            long long number = atoi(data);
-            if (!(number >= m && number <= mX) || number == 0)          // In range of int and Atoi was successful
+            long long number = atoi(data);                                             // Range check
+            if (!(number >= MIN_SHORT && number <= MAX_SHORT) || number == 0)          // In range of int and Atoi was successful
                 printErrorExit();
             newNode->data.integer = (int) number;
             break;
@@ -290,9 +251,14 @@ void innitLinkedList(ListNode *head, int *dtP, int *elemCount) {
     *elemCount = elements;
 }
 
+/**
+ * frontBackSplit:              Spilts a LinkedList in half, stores references to front and back references.
+ * param *source:               The source of the list
+ * param **frontRef:            address where we will put reference to front ref
+ * param **backRef:             address where we will put references to back ref
+*/
 void frontBackSplit(ListNode* source,
-                    ListNode** frontRef, ListNode** backRef)
-{
+                    ListNode** frontRef, ListNode** backRef) {
     ListNode* fast;
     ListNode* slow;
     slow = source;
@@ -315,9 +281,9 @@ void frontBackSplit(ListNode* source,
 }
 
 /**
- * compareNodes: Compares list node data in the linkedlist.
- * param *a: Node1
- * param *b: Node2
+ * compareNodes:                Compares list node data in the linkedlist.
+ * param *a:                    Node1
+ * param *b:                    Node2
 */
 double compareNodes(ListNode *a, ListNode *b) {
     switch (a->t) {
@@ -336,27 +302,35 @@ double compareNodes(ListNode *a, ListNode *b) {
     }
 }
 
+/**
+ * sortedMerge:                 Merges two sorted lists.
+ * param *a:                    Start of list one
+ * param *b:                    Start of list two
+*/
 ListNode* sortedMerge(ListNode* a, ListNode* b) {
-    ListNode* result = NULL;
+    ListNode* result = NULL;    // Create a reference for result node
 
-    /* Base cases */
     if (a == NULL)
-        return (b);
+        return (b);             // We are at the end of a, rest of list is rest of b
     else if (b == NULL)
-        return (a);
+        return (a);             // We are at the end of b, rest of list is rest of a 
 
-    /* Pick either a or b, and recur */
+    // Pick either a or b, and recur 
     if (compareNodes(a, b) <= 0) {
-        result = a;
-        result->next = sortedMerge(a->next, b);
-    }
-    else {
-        result = b;
-        result->next = sortedMerge(a, b->next);
+        result = a;                                 // At this position, a is the link
+        result->next = sortedMerge(a->next, b);     // Move a forward
+
+    } else {        
+        result = b;                                 // At this position, b is the link
+        result->next = sortedMerge(a, b->next);     // Move b forward
     }
     return (result);
 }
 
+/**
+ * mergeSort:                   Starts the merge sort process for a LinkedList.
+ * param **headRef:             The reference to the start of the list
+*/
 void mergeSort(ListNode** headRef) {
     ListNode* head = *headRef;
     ListNode* a;
@@ -386,36 +360,22 @@ void exportList(ListNode *head) {
     ListNode *itr = head->next;
     int i = 0;
     while (itr != NULL) {
+        if (i != 0) fprintf(out, ",");
         switch (itr->t) {
             case(SHORT):
-                if (i == 0)
-                    fprintf(out, "%d", itr->data.shortInteger);
-                else
-                    fprintf(out, ",%d", itr->data.shortInteger);
+                fprintf(out, "%d", itr->data.shortInteger);
                 break;
             case(INT):
-                if (i == 0)
-                    fprintf(out, "%d", itr->data.integer);
-                else
-                    fprintf(out, ",%d", itr->data.integer);
+                fprintf(out, "%d", itr->data.integer);
                 break;
             case(DOUBLE):
-                if (i == 0)
-                    fprintf(out, "%g", itr->data.doubleNum);
-                else
-                    fprintf(out, ",%g", itr->data.doubleNum);
+                fprintf(out, "%g", itr->data.doubleNum);
                 break;
             case(CHAR):
-                if (i == 0)
-                    fprintf(out, "%c", itr->data.character);
-                else
-                    fprintf(out, ",%c", itr->data.character);
+                fprintf(out, "%c", itr->data.character);
                 break;
             case(STRING):
-                if (i == 0)
-                    fprintf(out, "%s", itr->data.string);
-                else
-                    fprintf(out, ",%s", itr->data.string);
+                fprintf(out, "%s", itr->data.string);
                 break;
         }
         itr = itr->next;
