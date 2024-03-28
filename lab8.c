@@ -135,7 +135,6 @@ void printNode(ListNode *node) {
         printf("%d\n", node->data.integer);
     if (node->t == DOUBLE)
         printf("%f\n", node->data.doubleNum);
-    node = node->next;
 }
 
 /**
@@ -174,7 +173,7 @@ void createNode(ListNode *head, const char *data, int dataType) {
         case(2):
             newNode->t = INT;
             long long number = atoi(data);                                             // Range check
-            if (!(number >= MIN_SHORT && number <= MAX_SHORT) || number == 0)          // In range of int and Atoi was successful
+            if (!(number >= MIN_INT && number <= MAX_INT) || number == 0)          // In range of int and Atoi was successful
                 printErrorExit();
             newNode->data.integer = (int) number;
             break;
