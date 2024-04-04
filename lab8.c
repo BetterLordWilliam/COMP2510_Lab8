@@ -13,29 +13,21 @@
 
 // enums
 typedef enum dataTypes { 
-    SHORT, INT, DOUBLE, CHAR, STRING 
+    SHORT, INT, DOUBLE, CHAR, STRING
 } DataType;
 
 // Structs
 typedef struct listNode {
-    DataType t;
     int isHead;
     int byte_size;
-
-    union nodeData {
-        short shortInteger;
-        int integer;
-        float doubleNum;
-        char character;
-        char* string;
-    } data;
-
+    char *data;
     struct listNode *next;
 } ListNode;
 
 // Global variables
 FILE *in;
 FILE *out;
+DataType listData;
 
 // Basic Method headers
 void innitLinkedList(ListNode *head, int *dtP, int *elemCount);
@@ -124,7 +116,7 @@ void freeList(ListNode *head) {
  * printNode:                   Prints the contents of a node.
  * param *node:                 ListNode we are printing the contents
 */
-void printNode(ListNode *node) {
+/* void printNode(ListNode *node) {
     if (node->t == STRING)
         printf("%s\n", node->data.string);
     if (node->t == CHAR)
@@ -136,20 +128,20 @@ void printNode(ListNode *node) {
     if (node->t == DOUBLE)
         printf("%f\n", node->data.doubleNum);
     node = node->next;
-}
+} */
 
 /**
  * basicPrint:                  basic print function, prints all student information. For testing purposes.
  * param *head:                 the start of the list
 */
-void basicPrint(ListNode *head) {
+/* void basicPrint(ListNode *head) {
     ListNode *itr = head->next;
 
     while(itr != NULL) {
         printNode(itr);
         itr = itr->next;
     }
-}
+} */
 
 /**
  * createNode:                  Creates a node in the LinkedList
@@ -163,55 +155,91 @@ void createNode(ListNode *head, const char *data, int dataType) {
     newNode->next = NULL;
     newNode->isHead = 0;
 
-    switch (dataType) {
-        case(1):
-            newNode->t = SHORT;
-            long long numberS = atoi(data);                                            // Range check
-            if (!(numberS >= MIN_SHORT && numberS <= MAX_SHORT) || numberS == 0)       // In range of short and Atoi was successful
-                printErrorExit();
-            newNode->data.shortInteger = (short) numberS;
-            break;
-        case(2):
-            newNode->t = INT;
-            long long number = atoi(data);                                             // Range check
-            if (!(number >= MIN_SHORT && number <= MAX_SHORT) || number == 0)          // In range of int and Atoi was successful
-                printErrorExit();
-            newNode->data.integer = (int) number;
-            break;
-        case(3):
-            if (atof(data) == 0)
-                printErrorExit();
-            newNode->t = DOUBLE;
-            newNode->data.doubleNum = atof(data);
-            break;
-        case(4):
-            newNode->t = CHAR;
-            newNode->data.character = *(data);
-            break;
-        case(5):
-            char *dest;
-            if (data[strlen(data) - 1] == '\n') {
-                dest = malloc(sizeof(char) * strlen(data)-1);           // Get rid of the new line characters at the end of a string
-                memcpy(dest, data, strlen(data)-1);
-                dest[strlen(data)-1] = '\0';                            // Set end of string character manually
-            } else {
-                dest = malloc(sizeof(char) * strlen(data));             // Copy memory normally
-                memcpy(dest, data, strlen(data));
-            }
-            newNode->t = STRING;
-            newNode->data.string = dest;
-            break;
+    char *dest;
+    if (data[strlen(data) - 1] == '\n') {
+        dest = malloc(sizeof(char) * strlen(data)-1);           // Get rid of the new line characters at the end of a string
+        memcpy(dest, data, strlen(data)-1);
+        dest[strlen(data)-1] = '\0';                            // Set end of string character manually
+    } else {
+        dest = malloc(sizeof(char) * strlen(data));             // Copy memory normally
+        memcpy(dest, data, strlen(data));
     }
+    newNode->data = dest;
 
     if (itr == NULL) {
-        head->next = newNode;
+        head->next = newNode;                                   // The list is empty, move it to the start
         return;
     } else {
         while (itr->next != NULL) {
-            itr = itr->next;
+            itr = itr->next;                                    // Put the node at the end of the list
         }
         itr->next = newNode;
     }
+}
+
+/**
+ * setData:                     Sets the data type global variable for later use
+ * param data:                  Integer representing the data selection in the file
+*/
+void setData(int data) {
+    switch(data) {
+    case 1:
+        listData = SHORT;
+        break;
+    case 2:
+        listData = INT;
+        break;
+    case 3:
+        listData = DOUBLE;
+        break;
+    case 4:
+        listData = CHAR;
+        break;
+    case 5:
+        listData = STRING;
+        break;
+    }
+}
+
+/**
+ * checkData:                   Checks if the data type is in the specified range (short, int, float).
+ * param data:                  Integer representing the data selection in the file
+*/
+void checkData(const char *data) {
+    long long res = 0;
+    int thing = sscanf(data, "%lld", &res);
+    // printf("%lld\n", res);
+    double resF = 0;
+    int thingF = sscanf(data, "%lf", &resF);
+
+    switch (listData) {
+        case SHORT:
+            if (thing == 0 
+            || resF - res != 0 
+            || res > MAX_SHORT || res < MIN_SHORT)
+                printErrorExit();   // atoi fail
+            break;
+        case INT:
+            if (thing == 0 
+            || resF - res != 0 
+            || res > MAX_INT || res < MIN_INT)
+                printErrorExit();   // atoi fail
+            break;
+        case DOUBLE:
+            if (thingF == 0)
+                printErrorExit();   // atof fail
+            break;
+        case CHAR:
+            if (strlen(data) > 2)
+                printErrorExit();   // string larger that 1 byte, string
+            break;
+        case STRING:    
+            break;                  // no restriction
+        default:
+            printErrorExit();       // Messed up really badly
+            break;
+    }
+    return;
 }
 
 /**
@@ -230,14 +258,16 @@ void innitLinkedList(ListNode *head, int *dtP, int *elemCount) {
     char *array = 0;
     int elements = 0;
     *dtP = optionT;
+    setData(*dtP);
 
     fseek(in, 2, SEEK_SET);         // Put it to the line with numbers.
-    char delim[] = ",";
+    char delim[] = ",\n";
     if (fgets(line, sizeof(line), in) != NULL) {
         array = strtok(line, delim);
 
         // Checks for delimiter
         while (array != 0) {
+            checkData(array);
             createNode(head, array, *dtP);
             array = strtok(0, delim);
             elements++;             // Increment element count.
@@ -286,19 +316,19 @@ void frontBackSplit(ListNode* source,
  * param *b:                    Node2
 */
 double compareNodes(ListNode *a, ListNode *b) {
-    switch (a->t) {
+    switch (listData) {
         case SHORT:
-            return a->data.shortInteger - b->data.shortInteger;
+            return atoi(a->data) - atoi(b->data);
         case INT:
-            return a->data.integer - b->data.integer;
+            return atoi(a->data) - atoi(b->data);
         case DOUBLE:
-            return a->data.doubleNum - b->data.doubleNum;
+            return atof(a->data) - atof(b->data);
         case CHAR:
-            return a->data.character - b->data.character;
+            return strcmp(a->data, b->data);
         case STRING:
-            return strcmp(a->data.string, b->data.string);
+            return strcmp(a->data, b->data);
         default:
-            return 0;  // Unknown type
+            return 0;           // Unknown type, shouldn't ever get here
     }
 }
 
@@ -361,23 +391,7 @@ void exportList(ListNode *head) {
     int i = 0;
     while (itr != NULL) {
         if (i != 0) fprintf(out, ",");
-        switch (itr->t) {
-            case(SHORT):
-                fprintf(out, "%d", itr->data.shortInteger);
-                break;
-            case(INT):
-                fprintf(out, "%d", itr->data.integer);
-                break;
-            case(DOUBLE):
-                fprintf(out, "%g", itr->data.doubleNum);
-                break;
-            case(CHAR):
-                fprintf(out, "%c", itr->data.character);
-                break;
-            case(STRING):
-                fprintf(out, "%s", itr->data.string);
-                break;
-        }
+            fprintf(out, "%s", itr->data);
         itr = itr->next;
         i++;
     }
